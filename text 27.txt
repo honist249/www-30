@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>দৈনিক টাস্ক ড্যাশবোর্ড (মাসিক পরিকল্পনা)</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', 'Siyam Rupali', sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 25px; position: relative; }
+    .header h1 { color: #1a237e; margin-bottom: 5px; }
+    .header p { color: #555; font-size: 1.1em; font-weight: 500; }
+    .edit-mode-btn { position: absolute; top: 10px; right: 10px; padding: 8px 15px; background: #0984e3; border: none; color: white; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; }
+    .edit-mode-btn.active { background: #27ae60; }
+    
+    #live-clock-container {
+      background: #1a237e;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin: 15px auto;
+      max-width: 400px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      font-size: 1.2em;
+      font-weight: 600;
+    }
+
+    .tab-container { display: flex; border-bottom: 2px solid #ccc; margin-bottom: 20px; }
+    .tab-btn { padding: 15px 25px; cursor: pointer; border: none; background-color: transparent; font-size: 16px; font-weight: 600; border-bottom: 3px solid transparent; transition: all 0.3s ease; }
+    .tab-btn.active { color: #0984e3; border-bottom-color: #0984e3; }
+    .tab-content { display: none; animation: fadeIn 0.5s; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .card h2 { margin-top: 0; color: #1a237e; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px 15px; border-bottom: 1px solid #e0e0e0; text-align: left; vertical-align: middle; }
+    th { background-color: #f8f9fa; font-weight: 700; color: #333; }
+    tr:nth-child(even) { background-color: #fbfcfe; }
+    tr:last-child td { border-bottom: none; }
+    input[type="text"] { width: 95%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+    .progress-group { margin-bottom: 20px; }
+    .progress-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 1.1em; }
+    .progress-container { background: #e0e0e0; border-radius: 20px; overflow: hidden; height: 25px; }
+    .progress-bar { height: 100%; width: 0%; background-color: #27ae60; color: white; text-align: center; line-height: 25px; font-size: 14px; font-weight: bold; transition: width 0.5s ease; }
+    .reset-btn { margin-top: 20px; padding: 10px 20px; background: #e74c3c; border: none; color: white; border-radius: 6px; cursor: pointer; font-size: 16px; }
+    .editable-text[contenteditable="true"] { outline: 2px dashed #0984e3; background-color: #f0f8ff; padding: 2px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <button id="editModeBtn" class="edit-mode-btn" onclick="toggleEditMode()">📝 পৃষ্ঠা সম্পাদনা করুন</button>
+    <p class="editable-text" id="welcome-msg">প্রিয় মোঃ শাহাবুদ্দিন ঢালী,</p>
+    <h1 class="editable-text" id="main-title">টিম অ্যাফিলিয়েট মাসিক ড্যাশবোর্ড</h1>
+    <div id="live-clock-container"><div id="live-clock">লোড হচ্ছে...</div></div>
+  </div>
+
+  <div class="tab-container">
+    <button class="tab-btn active editable-text" id="tab-btn-summary" onclick="showTab('summaryTab')">📊 মাসিক সারাংশ</button>
+    <button class="tab-btn editable-text" id="tab-btn-p1" onclick="showTab('person1Tab')">👤 Md Shahabuddin Dhali</button>
+    <button class="tab-btn editable-text" id="tab-btn-p2" onclick="showTab('person2Tab')">👤 Md Rashed Khan</button>
+    <button class="tab-btn editable-text" id="tab-btn-p3" onclick="showTab('person3Tab')">👤 Md Shahab</button>
+  </div>
+
+  <div id="summaryTab" class="tab-content active">
+    <div class="card">
+        <h2 class="editable-text" id="summary-title">মাসিক অগ্রগতির চিত্র</h2>
+        <div class="progress-group">
+            <label class="editable-text" id="label-overall-month">সম্পূর্ণ দলের মাসিক অগ্রগতি</label>
+            <div class="progress-container"><div id="monthlyOverallProgressBar" class="progress-bar" style="background-color:#8e44ad;">0%</div></div>
+        </div>
+        <hr style="margin: 25px 0;">
+        <div id="monthly-summary-person-wise"></div>
+        <button class="reset-btn editable-text" id="reset-btn-text" onclick="resetAllProgress()">🔁 অগ্রগতি রিসেট করুন</button>
+    </div>
+  </div>
+
+  <div id="person1Tab" class="tab-content"></div>
+  <div id="person2Tab" class="tab-content"></div>
+  <div id="person3Tab" class="tab-content"></div>
+
+</div>
+
+<script>
+let isEditMode = false;
+
+const personDetails = [
+    { id: 1, name: "Md Shahabuddin Dhali", title: "কনটেন্ট স্ট্র্যাটেজিস্ট ও লেখক" },
+    { id: 2, name: "Md Rashed Khan", title: "SEO ও টেকনিক্যাল ম্যানেজার" },
+    { id: 3, name: "Md Shahab", title: "প্রোমোশন ও সোশ্যাল মিডিয়া ম্যানেজার" }
+];
+
+const tasks = [
+    // --- Md Shahabuddin Dhali (Content) - 30 Days ---
+    {id: 1, personId: 1, date: 1, task: "Pillar Post: কীওয়ার্ড রিসার্চ ও কম্পিটিটর অ্যানালাইসিস", platform: "Ahrefs"},
+    {id: 2, personId: 1, date: 2, task: "Pillar Post: বিস্তারিত আউটলাইন তৈরি করা", platform: "Google Docs"},
+    {id: 3, personId: 1, date: 3, task: "Pillar Post: প্রথম অংশ লেখা (১৫০০+ শব্দ)", platform: "Google Docs"},
+    {id: 4, personId: 1, date: 4, task: "Pillar Post: দ্বিতীয় অংশ লেখা ও সম্পন্ন করা (৩৫০০+ শব্দ)", platform: "Google Docs"},
+    {id: 5, personId: 1, date: 5, task: "Pillar Post: প্রুফরিডিং, এডিটিং ও ফাইনাল করা", platform: "Grammarly"},
+    {id: 6, personId: 1, date: 6, task: "সাপোর্টিং পোস্ট ১ (Info): টপিক নির্বাচন ও আউটলাইন", platform: "AnswerThePublic"},
+    {id: 7, personId: 1, date: 7, task: "সাপোর্টিং পোস্ট ১: লেখা সম্পন্ন করা (১৫০০+ শব্দ)", platform: "Google Docs"},
+    {id: 8, personId: 1, date: 8, task: "Roundup Review পোস্ট: প্রোডাক্ট রিসার্চ ও আউটলাইন", platform: "Amazon, Google Sheets"},
+    {id: 9, personId: 1, date: 9, task: "Roundup Review পোস্ট: লেখা সম্পন্ন করা (২৫০০+ শব্দ)", platform: "Google Docs"},
+    {id: 10, personId: 1, date: 10, task: "Pillar Post-এর উপর ভিত্তি করে ভিডিও স্ক্রিপ্ট লেখা", platform: "Google Docs"},
+    {id: 11, personId: 1, date: 11, task: "সাপোর্টিং পোস্ট ২ (How-to): লেখা ও সম্পন্ন করা (১২০০+ শব্দ)", platform: "Google Docs"},
+    {id: 12, personId: 1, date: 12, task: "পুরনো ২টি পোস্টের কনটেন্ট আপডেট ও রিফ্রেশ করা", platform: "WordPress, SurferSEO"},
+    {id: 13, personId: 1, date: 13, task: "পরবর্তী সপ্তাহের জন্য ৩টি নতুন কনটেন্ট আইডিয়া জেনারেট", platform: "Ahrefs"},
+    {id: 14, personId: 1, date: 14, task: "Skyscraper Post: টপিক নির্বাচন ও সেরা ১০ প্রতিযোগীর বিশ্লেষণ", platform: "Ahrefs"},
+    {id: 15, personId: 1, date: 15, task: "Skyscraper Post: বিস্তারিত আউটলাইন তৈরি", platform: "Google Docs"},
+    {id: 16, personId: 1, date: 16, task: "Skyscraper Post: লেখা শুরু করা (২০০০+ শব্দ)", platform: "Google Docs"},
+    {id: 17, personId: 1, date: 17, task: "Skyscraper Post: লেখা সম্পন্ন ও এডিটিং (৪০০০+ শব্দ)", platform: "Grammarly"},
+    {id: 18, personId: 1, date: 18, task: "কেস স্টাডি পোস্ট: ডেটা সংগ্রহ ও আউটলাইন তৈরি", platform: "Google Sheets"},
+    {id: 19, personId: 1, date: 19, task: "কেস স্টাডি পোস্ট: লেখা সম্পন্ন করা (২০০০+ শব্দ)", platform: "Google Docs"},
+    {id: 20, personId: 1, date: 20, task: "গেস্ট পোস্টের জন্য একটি আর্টিকেল লেখা (SEO টিমের জন্য)", platform: "Google Docs"},
+    {id: 21, personId: 1, date: 21, task: "FAQ সেকশনের জন্য ১০টি প্রশ্ন ও উত্তর তৈরি করা", platform: "Google"},
+    {id: 22, personId: 1, date: 22, task: "একটি ব্লগ পোস্টকে PDF/eBook-এ রূপান্তরের জন্য রি-ফরম্যাট করা", platform: "Canva"},
+    {id: 23, personId: 1, date: 23, task: "কনটেন্ট ক্যালেন্ডার রিভিউ ও আপডেট করা", platform: "Trello"},
+    {id: 24, personId: 1, date: 24, task: "ইউজারদের কমেন্ট ও ফিডব্যাক রিভিউ করে নতুন আইডিয়া খোঁজা", platform: "WordPress Comments"},
+    {id: 25, personId: 1, date: 25, task: "ইন্টারভিউ-ভিত্তিক পোস্টের জন্য প্রশ্নমালা তৈরি", platform: "Google Docs"},
+    {id: 26, personId: 1, date: 26, task: "পুরনো ৩টি আর্টিকেলের জন্য নতুন গ্রাফিক্সের আইডিয়া দেওয়া", platform: "Miro"},
+    {id: 27, personId: 1, date: 27, task: "পরবর্তী মাসের Pillar Post-এর জন্য প্রাথমিক রিসার্চ", platform: "Ahrefs"},
+    {id: 28, personId: 1, date: 28, task: "টপ পারফর্মিং কনটেন্টের মাসিক রিপোর্ট তৈরি", platform: "Google Analytics"},
+    {id: 29, personId: 1, date: 29, task: "কনটেন্ট টিমের পারফর্মেন্স রিভিউ", platform: "Team Meeting"},
+    {id: 30, personId: 1, date: 30, task: "পরবর্তী মাসের কনটেন্ট স্ট্র্যাটেজি ফাইনাল করা", platform: "Trello"},
+    // --- Md Rashed Khan (SEO) - 30 Days ---
+    {id: 31, personId: 2, date: 1, task: "মাসিক টেকনিক্যাল SEO অডিট শুরু করা", platform: "Screaming Frog"},
+    {id: 32, personId: 2, date: 2, task: "কীওয়ার্ড র‍্যাংক ট্র্যাকিং সেটআপ ও রিভিউ", platform: "Ahrefs Rank Tracker"},
+    {id: 33, personId: 2, date: 3, task: "সাইটের ক্রল বাজেট ও ইনডেক্সিং স্ট্যাটাস চেক", platform: "Search Console"},
+    {id: 34, personId: 2, date: 4, task: "অডিট থেকে প্রাপ্ত টেকনিক্যাল সমস্যা সমাধান করা (পর্ব ১)", platform: "WordPress"},
+    {id: 35, personId: 2, date: 5, task: "Pillar Post: On-Page SEO ও পাবলিশ করা", platform: "Rank Math"},
+    {id: 36, personId: 2, date: 6, task: "Pillar Post: Indexing সাবমিট ও সোশ্যাল বুকমার্কিং", platform: "Search Console"},
+    {id: 37, personId: 2, date: 7, task: "গেস্ট পোস্টিং-এর জন্য ১০টি সাইট প্রসপেক্টিং", platform: "Ahrefs"},
+    {id: 38, personId: 2, date: 8, task: "সাপোর্টিং পোস্ট ১: On-Page SEO ও পাবলিশ", platform: "Rank Math"},
+    {id: 39, personId: 2, date: 9, task: "সাইটের ইন্টারনাল লিংকিং স্ট্রাকচার উন্নত করা", platform: "WordPress"},
+    {id: 40, personId: 2, date: 10, task: "Roundup Review পোস্ট: On-Page SEO ও পাবলিশ", platform: "Rank Math"},
+    {id: 41, personId: 2, date: 11, task: "গেস্ট পোস্টিং আউটরিচ ইমেইল পাঠানো (১০টি)", platform: "Gmail"},
+    {id: 42, personId: 2, date: 12, task: "সাপোর্টিং পোস্ট ২: On-Page SEO ও পাবলিশ", platform: "Rank Math"},
+    {id: 43, personId: 2, date: 13, task: "ব্রোকেন লিংক বিল্ডিং-এর জন্য প্রসপেক্টিং", platform: "Ahrefs"},
+    {id: 44, personId: 2, date: 14, task: "সাইট স্পিড ও Core Web Vitals পুনরায় চেক করা", platform: "PageSpeed Insights"},
+    {id: 45, personId: 2, date: 15, task: "গেস্ট পোস্ট আউটরিচের ফলো-আপ করা", platform: "Gmail"},
+    {id: 46, personId: 2, date: 16, task: "প্রতিযোগীদের নতুন ব্যাকলিংক অ্যানালাইসিস", platform: "Ahrefs"},
+    {id: 47, personId: 2, date: 17, task: "স্কিমা মার্কআপ (FAQ, Review) যোগ করা", platform: "Rank Math"},
+    {id: 48, personId: 2, date: 18, task: "Skyscraper Post: On-Page SEO ও পাবলিশ", platform: "Rank Math"},
+    {id: 49, personId: 2, date: 19, task: "Skyscraper আউটরিচ: প্রসপেক্টিং (৩০+ সাইট)", platform: "Ahrefs"},
+    {id: 50, personId: 2, date: 20, task: "Skyscraper আউটরিচ ইমেইল পাঠানো", platform: "Buzzstream"},
+    {id: 51, personId: 2, date: 21, task: "কেস স্টাডি পোস্ট: On-Page SEO ও পাবলিশ", platform: "Rank Math"},
+    {id: 52, personId: 2, date: 22, task: "ফোরাম/কমিউনিটি থেকে লিংক বিল্ডিং-এর সুযোগ খোঁজা", platform: "Quora, Reddit"},
+    {id: 53, personId: 2, date: 23, task: "লোকাল SEO (যদি প্রযোজ্য হয়) প্রোফাইল অপটিমাইজ করা", platform: "Google Business Profile"},
+    {id: 54, personId: 2, date: 24, task: "Disavow করার জন্য স্প্যামি ব্যাকলিংক রিভিউ", platform: "Ahrefs, Search Console"},
+    {id: 55, personId: 2, date: 25, task: "ছবির Alt ট্যাগ ও অপটিমাইজেশন রিভিউ করা", platform: "Screaming Frog"},
+    {id: 56, personId: 2, date: 26, task: "Google Analytics থেকে অর্গানিক ট্র্যাফিক রিপোর্ট তৈরি", platform: "Google Analytics"},
+    {id: 57, personId: 2, date: 27, task: "ব্যাকলিংক প্রোফাইলের মাসিক গ্রোথ রিপোর্ট তৈরি", platform: "Ahrefs"},
+    {id: 58, personId: 2, date: 28, task: "পরবর্তী মাসের SEO লক্ষ্যমাত্রা নির্ধারণ", platform: "Google Sheets"},
+    {id: 59, personId: 2, date: 29, task: "SEO টিমের পারফর্মেন্স রিভিউ", platform: "Team Meeting"},
+    {id: 60, personId: 2, date: 30, task: "পরবর্তী মাসের SEO স্ট্র্যাটেজি ফাইনাল করা", platform: "Trello"},
+    // --- Md Shahab (Promotion) - 30 Days ---
+    {id: 61, personId: 3, date: 1, task: "মাসিক প্রোমোশন ক্যালেন্ডার তৈরি করা", platform: "Trello/Asana"},
+    {id: 62, personId: 3, date: 2, task: "সোশ্যাল মিডিয়া কন্টেন্ট টেমপ্লেট ডিজাইন", platform: "Canva"},
+    {id: 63, personId: 3, date: 3, task: "Pinterest বোর্ডের পরিকল্পনা ও অপটিমাইজেশন", platform: "Pinterest"},
+    {id: 64, personId: 3, date: 4, task: "ফেসবুক গ্রুপের তালিকা তৈরি ও জয়েন করা", platform: "Facebook"},
+    {id: 65, personId: 3, date: 5, task: "Pillar Post: ভিজ্যুয়াল তৈরি (ইনফোগ্রাফিক, পিন)", platform: "Canva"},
+    {id: 66, personId: 3, date: 6, task: "Pillar Post: Pinterest-এ শেয়ার (১০+ পিন)", platform: "Pinterest"},
+    {id: 67, personId: 3, date: 7, task: "Pillar Post: Facebook ও Twitter-এ প্রোমোট", platform: "Facebook, Twitter"},
+    {id: 68, personId: 3, date: 8, task: "সাপোর্টিং পোস্ট ১: ভিজ্যুয়াল তৈরি ও শেয়ার", platform: "Canva, Social Media"},
+    {id: 69, personId: 3, date: 9, task: "সোশ্যাল মিডিয়াতে আসা কমেন্টের উত্তর দেওয়া", platform: "All platforms"},
+    {id: 70, personId: 3, date: 10, task: "Roundup Review পোস্ট: ভিজ্যুয়াল ও শেয়ার", platform: "Canva, Social Media"},
+    {id: 71, personId: 3, date: 11, task: "ভিডিও তৈরি ও এডিটিং শুরু করা", platform: "InVideo/Pictory"},
+    {id: 72, personId: 3, date: 12, task: "ভিডিও ইউটিউবে পাবলিশ ও অপটিমাইজ করা", platform: "YouTube"},
+    {id: 73, personId: 3, date: 13, task: "ভিডিও সকল সোশ্যাল মিডিয়াতে শেয়ার করা", platform: "Facebook, Twitter, LinkedIn"},
+    {id: 74, personId: 3, date: 14, task: "সাপ্তাহিক ইমেইল নিউজলেটার ড্রাফট করা", platform: "Mailchimp"},
+    {id: 75, personId: 3, date: 15, task: "সাপ্তাহিক নিউজলেটার পাঠানো", platform: "Mailchimp"},
+    {id: 76, personId: 3, date: 16, task: "ইনফ্লুয়েন্সারদের সাথে যোগাযোগের জন্য তালিকা তৈরি", platform: "Twitter, Instagram"},
+    {id: 77, personId: 3, date: 17, task: "কমিউনিটি এনগেজমেন্ট (Reddit, Quora-তে উত্তর দেওয়া)", platform: "Reddit, Quora"},
+    {id: 78, personId: 3, date: 18, task: "Skyscraper Post: ভিজ্যুয়াল ও প্রোমোশন প্ল্যান", platform: "Canva, Trello"},
+    {id: 79, personId: 3, date: 19, task: "Skyscraper Post: সোশ্যাল মিডিয়াতে টিজার পোস্ট", platform: "Twitter, LinkedIn"},
+    {id: 80, personId: 3, date: 20, task: "Skyscraper Post: পূর্ণাঙ্গ প্রোমোশন শুরু", platform: "All platforms"},
+    {id: 81, personId: 3, date: 21, task: "কেস স্টাডি পোস্ট: ভিজ্যুয়াল ও শেয়ার", platform: "Canva, LinkedIn"},
+    {id: 82, personId: 3, date: 22, task: "PDF/eBook: ল্যান্ডিং পেজ তৈরি ও প্রোমোট করা", platform: "WordPress, Mailchimp"},
+    {id: 83, personId: 3, date: 23, task: "ফেসবুক/ইনস্টাগ্রাম স্টোরি তৈরি ও শেয়ার", platform: "Instagram, Facebook"},
+    {id: 84, personId: 3, date: 24, task: "A/B টেস্টিং: সোশ্যাল মিডিয়া পোস্টের হেডলাইন পরীক্ষা", platform: "Buffer"},
+    {id: 85, personId: 3, date: 25, task: "পার্টনার বা অ্যাফিলিয়েটদের সাথে কো-প্রোমোশন", platform: "Email, Social Media"},
+    {id: 86, personId: 3, date: 26, task: "সোশ্যাল মিডিয়া অ্যানালিটিক্স রিভিউ", platform: "Buffer, Facebook Insights"},
+    {id: 87, personId: 3, date: 27, task: "ইমেইল মার্কেটিং পারফর্মেন্স রিপোর্ট তৈরি", platform: "Mailchimp"},
+    {id: 88, personId: 3, date: 28, task: "পরবর্তী মাসের প্রোমোশন বাজেট ও ক্যাম্পেইন পরিকল্পনা", platform: "Google Sheets"},
+    {id: 89, personId: 3, date: 29, task: "প্রোমোশন টিমের পারফর্মেন্স রিভিউ", platform: "Team Meeting"},
+    {id: 90, personId: 3, date: 30, task: "পরবর্তী মাসের প্রোমোশন স্ট্র্যাটেজি ফাইনাল করা", platform: "Trello"},
+];
+
+document.addEventListener('DOMContentLoaded', () => {
+    generatePersonTabs();
+    generateSummaryView();
+    loadAllData();
+    updateClock();
+    setInterval(updateClock, 1000);
+});
+
+function generatePersonTabs() {
+    personDetails.forEach(person => {
+        const personTabContent = document.getElementById(`person${person.id}Tab`);
+        let tableRows = tasks.filter(t => t.personId === person.id)
+            .map(task => `
+                <tr>
+                    <td style="text-align:center;"><input type="checkbox" id="task-${task.id}" data-person-id="${task.personId}" onchange="updateAllProgress()"></td>
+                    <td class="editable-text" id="task-date-${task.id}"><strong>দিন ${task.date}</strong></td>
+                    <td class="editable-text" id="task-desc-${task.id}">${task.task}</td>
+                    <td class="editable-text" id="task-platform-${task.id}">${task.platform}</td>
+                    <td><input type="text" id="comment-${task.id}" placeholder="আপডেট..." oninput="saveData(this.id, this.value)"></td>
+                </tr>
+            `).join('');
+
+        personTabContent.innerHTML = `
+            <div class="card">
+                <h2 class="editable-text" id="p${person.id}-title">👤 ${person.name} (${person.title})</h2>
+                <table>
+                    <thead><tr><th>✔️</th><th>দিন</th><th>কাজ</th><th>প্ল্যাটফর্ম/টুলস</th><th>মন্তব্য</th></tr></thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+            </div>`;
+    });
+}
+
+function generateSummaryView() {
+    const summaryContainer = document.getElementById('monthly-summary-person-wise');
+    summaryContainer.innerHTML = personDetails.map(person => `
+        <div class="progress-group">
+            <label>${person.name}</label>
+            <div class="progress-container">
+                <div id="p${person.id}_monthly_progress" class="progress-bar" style="background-color: ${['#3498db', '#f1c40f', '#e74c3c'][person.id-1]};">0%</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function loadAllData() {
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        if (localStorage.getItem(cb.id) === 'true') cb.checked = true;
+    });
+    document.querySelectorAll('input[type="text"]').forEach(input => {
+        input.value = localStorage.getItem(input.id) || '';
+    });
+    document.querySelectorAll('.editable-text').forEach(el => {
+        const savedText = localStorage.getItem('text-edit-' + el.id);
+        if (savedText) el.innerHTML = savedText;
+    });
+    updateAllProgress();
+}
+
+function saveData(key, value) {
+    localStorage.setItem(key, value);
+}
+
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
+function updateAllProgress() {
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => localStorage.setItem(cb.id, cb.checked));
+
+    const calculateProgress = (personId) => {
+        const selector = `input[type="checkbox"]${personId ? `[data-person-id="${personId}"]` : ''}`;
+        const checkboxes = document.querySelectorAll(selector);
+        const completed = Array.from(checkboxes).filter(cb => cb.checked).length;
+        const total = checkboxes.length;
+        return total > 0 ? Math.round((completed / total) * 100) : 0;
+    };
+
+    const updateBar = (barId, percent) => {
+        const bar = document.getElementById(barId);
+        if (bar) {
+            bar.style.width = percent + '%';
+            bar.textContent = percent + '%';
+        }
+    };
+    
+    personDetails.forEach(person => {
+        updateBar(`p${person.id}_monthly_progress`, calculateProgress(person.id));
+    });
+    
+    updateBar('monthlyOverallProgressBar', calculateProgress(null));
+}
+
+function toggleEditMode() {
+    isEditMode = !isEditMode;
+    const editableElements = document.querySelectorAll('.editable-text');
+    const editButton = document.getElementById('editModeBtn');
+    editButton.innerHTML = isEditMode ? '💾 পরিবর্তন সেভ করুন' : '📝 পৃষ্ঠা সম্পাদনা করুন';
+    editButton.classList.toggle('active', isEditMode);
+
+    editableElements.forEach(el => {
+        el.setAttribute('contenteditable', isEditMode);
+        if (!isEditMode) {
+            localStorage.setItem('text-edit-' + el.id, el.innerHTML);
+        }
+    });
+    alert(isEditMode ? 'সম্পাদনা মোড চালু হয়েছে। পরিবর্তন শেষে "সেভ করুন" বাটনে ক্লিক করুন।' : 'আপনার পরিবর্তনগুলো সেভ করা হয়েছে!');
+}
+
+function resetAllProgress() {
+    if (confirm("আপনি কি শুধুমাত্র কাজের অগ্রগতি এবং মন্তব্য মুছে ফেলতে নিশ্চিত? আপনার কাস্টম লেখাগুলো থেকে যাবে।")) {
+        const keysToDelete = [];
+        // First, gather all the keys we want to remove.
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('task-') || key.startsWith('comment-')) {
+                keysToDelete.push(key);
+            }
+        }
+
+        // Now, remove them. This is safer than modifying while iterating.
+        for (const key of keysToDelete) {
+            localStorage.removeItem(key);
+        }
+
+        alert("কাজের অগ্রগতি এবং মন্তব্য রিসেট করা হয়েছে। পৃষ্ঠাটি পুনরায় লোড হবে।");
+        location.reload();
+    }
+}
+
+function updateClock() {
+    const clockElement = document.getElementById('live-clock');
+    if (clockElement) {
+        const now = new Date();
+        const options = {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+            hour: 'numeric', minute: 'numeric', second: 'numeric', timeZone: 'Asia/Dhaka'
+        };
+        const formattedTime = now.toLocaleString('bn-BD', options);
+        clockElement.textContent = `🇧🇩 ${formattedTime}`;
+    }
+}
+</script>
+
+</body>
+</html>
